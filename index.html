@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哞哞牧场 - 每周新增客户计算器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Fredoka', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 40%, #90EE90 40%, #7CFC00 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 云朵装饰 */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 100px;
+            opacity: 0.8;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .cloud::before {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 100px;
+        }
+        
+        .cloud1 {
+            width: 100px;
+            height: 40px;
+            top: 10%;
+            left: 10%;
+        }
+        
+        .cloud1::before {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 10px;
+        }
+        
+        .cloud2 {
+            width: 80px;
+            height: 35px;
+            top: 15%;
+            right: 20%;
+            animation-delay: -5s;
+        }
+        
+        .cloud2::before {
+            width: 60px;
+            height: 40px;
+            top: -20px;
+            right: 15px;
+        }
+        
+        .cloud3 {
+            width: 120px;
+            height: 45px;
+            top: 8%;
+            left: 60%;
+            animation-delay: -10s;
+        }
+        
+        .cloud3::before {
+            width: 70px;
+            height: 60px;
+            top: -30px;
+            left: 25px;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(20px) translateY(-10px); }
+            50% { transform: translateX(-10px) translateY(5px); }
+            75% { transform: translateX(15px) translateY(-5px); }
+        }
+        
+        /* 奶牛装饰 */
+        .cow-decoration {
+            position: fixed;
+            font-size: 3rem;
+            z-index: 10;
+            animation: bounce 2s infinite;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .cow1 {
+            top: 10%;
+            right: 5%;
+            animation-delay: 0s;
+        }
+        
+        .cow2 {
+            bottom: 10%;
+            left: 3%;
+            font-size: 2.5rem;
+            animation-delay: 0.5s;
+        }
+        
+        .cow3 {
+            top: 50%;
+            right: 2%;
+            font-size: 2rem;
+            animation-delay: 1s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        
+        /* 草地装饰 */
+        .grass {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, #228B22 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .grass-blade {
+            position: absolute;
+            bottom: 0;
+            width: 3px;
+            background: #32CD32;
+            border-radius: 50% 50% 0 0;
+            animation: sway 3s infinite ease-in-out;
+        }
+        
+        @keyframes sway {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 20;
+        }
+        
+        /* 标题区域 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 4px solid #8B4513;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '🐄';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            animation: wiggle 2s infinite;
+        }
+        
+        .header::after {
+            content: '🥛';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            animation: wiggle 2s infinite reverse;
+        }
+        
+        @keyframes wiggle {
+            0%, 100% { transform: translateY(-50%) rotate(-5deg); }
+            50% { transform: translateY(-50%) rotate(5deg); }
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: #2E8B57;
+            text-shadow: 2px 2px 0px #FFF, 4px 4px 0px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #8B4513;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        /* 快捷操作栏 */
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .quick-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-family: 'Fredoka', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quick-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .quick-btn:hover::before {
+            left: 100%;
+        }
+        
+        .quick-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .quick-btn:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+            color: white;
+            border: 3px solid #FFF;
+        }
+        
+        .btn-lock {
+            background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+            color: white;
+            border: 3px solid #FFF;
+        }
+        
+        .btn-lock.locked {
+            background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%);
+        }
+        
+        .btn-new-week {
+            background: linear-gradient(135deg, #A8E6CF 0%, #88D8A3 100%);
+            color: #2E8B57;
+            border: 3px solid #FFF;
+        }
+        
+        .btn-history {
+            background: linear-gradient(135deg, #FFD93D 0%, #F6AD55 100%);
+            color: #8B4513;
+            border: 3px solid #FFF;
+        }
+        
+        .btn-reset {
+            background: linear-gradient(135deg, #DDA0DD 0%, #DA70D6 100%);
+            color: white;
+            border: 3px solid #FFF;
+        }
+        
+        /* 周次选择器 */
+        .week-selector-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 3px solid #8B4513;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .week-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 5px;
+        }
+        
+        .week-tab {
+            padding: 10px 20px;
+            background: #F0F0F0;
+            border: 3px solid #DDD;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            white-space: nowrap;
+            position: relative;
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        .week-tab:hover {
+            background: #E0E0E0;
+            transform: translateY(-2px);
+        }
+        
+        .week-tab.active {
+            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
+            color: #2E8B57;
+            border-color: #2E8B57;
+            box-shadow: 0 4px 10px rgba(46, 139, 87, 0.3);
+        }
+        
+        .week-tab.locked::after {
+            content: '🔒';
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+        
+        .week-info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #DDD;
+        }
+        
+        .week-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge.editable {
+            background: #90EE90;
+            color: #2E8B57;
+        }
+        
+        .status-badge.locked {
+            background: #FFB6C1;
+            color: #8B0000;
+        }
+        
+        .base-clients-display {
+            font-size: 1.2rem;
+            color: #8B4513;
+            font-weight: 700;
+        }
+        
+        /* 主内容区 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 25px;
+            border: 4px solid #8B4513;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            color: #2E8B57;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+        
+        .panel-title i {
+            color: #FF6B6B;
+        }
+        
+        /* 输入区域 */
+        .input-cow {
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFFACD 100%);
+            border-radius: 20px;
+            padding: 20px;
+            border: 3px solid #DEB887;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .input-cow::before {
+            content: '🐮';
+            position: absolute;
+            top: -15px;
+            right: 10px;
+            font-size: 2rem;
+            animation: bounce 1s infinite;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #8B4513;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8B4513;
+            font-size: 1.2rem;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 3px solid #DEB887;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-family: 'Fredoka', sans-serif;
+            background: white;
+            color: #8B4513;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #FF6B6B;
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
+        }
+        
+        input[type="number"]:disabled {
+            background: #F5F5F5;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
+            color: #2E8B57;
+            padding: 12px;
+            font-weight: 700;
+            border-radius: 10px;
+        }
+        
+        .data-table td {
+            background: #F9F9F9;
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px;
+        }
+        
+        .data-table tr:hover td {
+            background: #E8F5E9;
+            transform: scale(1.02);
+            transition: all 0.2s;
+        }
+        
+        .day-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #DDD;
+            border-radius: 10px;
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2E8B57;
+        }
+        
+        .day-input:focus {
+            border-color: #FF6B6B;
+            outline: none;
+        }
+        
+        .rate-display {
+            font-weight: 700;
+            color: #FF6B6B;
+            font-size: 1.1rem;
+        }
+        
+        /* 结果面板 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFFACD 100%);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 3px solid #DEB887;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+            opacity: 0.6;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #FF6B6B;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #8B4513;
+            font-weight: 600;
+            margin-top: 5px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 每日结果 */
+        .daily-results {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .daily-results {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .day-card {
+            background: white;
+            border-radius: 12px;
+            padding: 10px 5px;
+            text-align: center;
+            border: 2px solid #DDD;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-5px);
+            border-color: #FF6B6B;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .day-name {
+            font-size: 0.8rem;
+            color: #888;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .day-rate {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2E8B57;
+        }
+        
+        .day-count {
+            font-size: 0.75rem;
+            color: #FF6B6B;
+            margin-top: 3px;
+        }
+        
+        /* 高亮框 */
+        .highlight-box {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 4px solid white;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .highlight-box::before {
+            content: '🐄';
+            position: absolute;
+            left: 10px;
+            bottom: 10px;
+            font-size: 3rem;
+            opacity: 0.3;
+            animation: bounce 2s infinite;
+        }
+        
+        .highlight-box::after {
+            content: '🌟';
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 2rem;
+            animation: rotate 3s infinite linear;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .highlight-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+        
+        .highlight-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .highlight-detail {
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            height: 250px;
+            border: 3px solid #DEB887;
+        }
+        
+        /* 提示框 */
+        .tip-box {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 3px solid #4CAF50;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .tip-box i {
+            color: #4CAF50;
+            font-size: 1.5rem;
+        }
+        
+        .tip-content {
+            color: #2E7D32;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 5px solid #8B4513;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px dashed #DEB887;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            color: #2E8B57;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-btn {
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .close-btn:hover {
+            background: #EE5A6F;
+            transform: rotate(90deg);
+        }
+        
+        /* 历史列表 */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .history-item {
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFFACD 100%);
+            border-radius: 15px;
+            padding: 15px;
+            border: 3px solid #DEB887;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .history-item:hover {
+            transform: translateX(5px);
+            border-color: #FF6B6B;
+        }
+        
+        .history-item.locked {
+            border-color: #DDA0DD;
+            background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+        }
+        
+        .history-main {
+            flex: 1;
+        }
+        
+        .history-week {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #8B4513;
+            margin-bottom: 5px;
+        }
+        
+        .history-date {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .history-stats {
+            display: flex;
+            gap: 15px;
+            margin-right: 15px;
+        }
+        
+        .history-stat {
+            text-align: center;
+        }
+        
+        .history-stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #FF6B6B;
+        }
+        
+        .history-stat-label {
+            font-size: 0.7rem;
+            color: #888;
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .icon-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        
+        .icon-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .btn-delete {
+            background: #FF6B6B;
+            color: white;
+        }
+        
+        .btn-goto {
+            background: #87CEEB;
+            color: #2E8B57;
+        }
+        
+        /* 保存提示 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 2000;
+            border: 3px solid white;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast i {
+            font-size: 1.5rem;
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #2E8B57;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        
+        /* 花朵装饰 */
+        .flower {
+            position: fixed;
+            font-size: 2rem;
+            animation: sway 3s infinite ease-in-out;
+            z-index: 5;
+        }
+        
+        .flower1 { bottom: 20px; left: 10%; animation-delay: 0s; }
+        .flower2 { bottom: 30px; left: 25%; animation-delay: 0.5s; }
+        .flower3 { bottom: 15px; right: 15%; animation-delay: 1s; }
+        .flower4 { bottom: 25px; right: 30%; animation-delay: 1.5s; }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            .header::before, .header::after { display: none; }
+            .quick-actions { justify-content: stretch; }
+            .quick-btn { flex: 1; justify-content: center; }
+            .daily-results { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="cloud cloud3"></div>
+    
+    <div class="cow-decoration cow1">🐄</div>
+    <div class="cow-decoration cow2">🐮</div>
+    <div class="cow-decoration cow3">🐃</div>
+    
+    <div class="flower flower1">🌻</div>
+    <div class="flower flower2">🌼</div>
+    <div class="flower flower3">🌸</div>
+    <div class="flower flower4">🌺</div>
+    
+    <div class="grass" id="grass"></div>
+
+    <div class="container">
+        <!-- 标题 -->
+        <header class="header">
+            <h1>哞哞牧场客户计算器</h1>
+            <p class="subtitle">🌱 记录每周新增客户，像奶牛产奶一样稳定增长！ 🥛</p>
+        </header>
+        
+        <!-- 快捷操作栏 -->
+        <div class="quick-actions">
+            <button class="quick-btn btn-calculate" onclick="calculateAndSave()">
+                <i class="fas fa-calculator"></i>
+                计算保存
+            </button>
+            <button class="quick-btn btn-lock" id="lockBtn" onclick="toggleLock()">
+                <i class="fas fa-lock-open"></i>
+                <span id="lockText">锁定本周</span>
+            </button>
+            <button class="quick-btn btn-new-week" onclick="addNewWeek()">
+                <i class="fas fa-plus-circle"></i>
+                新增一周
+            </button>
+            <button class="quick-btn btn-history" onclick="showHistory()">
+                <i class="fas fa-history"></i>
+                历史记录
+            </button>
+            <button class="quick-btn btn-reset" onclick="resetAll()">
+                <i class="fas fa-redo"></i>
+                重置
+            </button>
+        </div>
+        
+        <!-- 周次选择 -->
+        <div class="week-selector-container">
+            <div class="week-tabs" id="weekTabs">
+                <!-- 动态生成 -->
+            </div>
+            <div class="week-info-bar">
+                <div class="week-status">
+                    <span>当前状态：</span>
+                    <span class="status-badge editable" id="statusBadge">
+                        <i class="fas fa-edit"></i> 可编辑
+                    </span>
+                </div>
+                <div class="base-clients-display">
+                    起始客户：<span id="baseClientsDisplay">1500</span> 🐄
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容 -->
+        <div class="main-grid">
+            <!-- 左侧：数据输入 -->
+            <div class="panel">
+                <h2 class="panel-title">
+                    <i class="fas fa-pen"></i>
+                    数据录入
+                </h2>
+                
+                <div class="input-cow">
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-users"></i> 
+                            本周起始客户总数
+                            <small style="color: #999; font-weight: normal;">（第一周可自定义）</small>
+                        </label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-cow"></i>
+                            <input type="number" id="baseClientsInput" value="1500" min="0" 
+                                   placeholder="输入起始客户数" onchange="updateBaseClients()">
+                        </div>
+                    </div>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>星期</th>
+                            <th>日期</th>
+                            <th>新增数</th>
+                            <th>增长率</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <i class="fas fa-lightbulb"></i>
+                    <div class="tip-content">
+                        <strong>小贴士：</strong>点击"计算保存"按钮自动计算所有数据。锁定后防止误改，可随时解锁编辑。新增一周会自动累加客户数哦！
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：结果展示 -->
+            <div class="panel">
+                <h2 class="panel-title">
+                    <i class="fas fa-chart-pie"></i>
+                    数据分析
+                </h2>
+                
+                <!-- 统计卡片 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">本周新增 🐮</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statAvg">0</div>
+                        <div class="stat-label">日均新增 🌱</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statMax">-</div>
+                        <div class="stat-label">最佳表现 🏆</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTrend">→</div>
+                        <div class="stat-label">周环比 📈</div>
+                    </div>
+                </div>
+                
+                <!-- 每日卡片 -->
+                <div class="daily-results" id="dailyCards">
+                    <!-- 动态生成 -->
+                </div>
+                
+                <!-- 总增长率 -->
+                <div class="highlight-box">
+                    <div class="highlight-label">本周总增长率</div>
+                    <div class="highlight-value" id="totalRate">0.00%</div>
+                    <div class="highlight-detail">
+                        新增 <strong id="totalNew">0</strong> 位客户 | 
+                        基于 <strong id="totalBase">0</strong> 位起始客户
+                    </div>
+                </div>
+                
+                <!-- 图表 -->
+                <div class="chart-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>🐄 数据自动保存到本地 | 刷新不丢失 | 哞哞牧场出品 🥛</p>
+        </footer>
+    </div>
+    
+    <!-- 历史记录模态框 -->
+    <div class="modal" id="historyModal" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📚</span>
+                    历史周次档案
+                </div>
+                <button class="close-btn" onclick="closeHistory()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="history-list" id="historyList">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast提示 -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">保存成功！</span>
+    </div>
+
+    <script>
+        // 数据存储
+        let appData = {
+            weeks: [],
+            currentWeekIndex: 0
+        };
+        
+        const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        let chart = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            generateGrass();
+            setInterval(autoSave, 30000); // 30秒自动保存
+        });
+        
+        // 生成草地装饰
+        function generateGrass() {
+            const grass = document.getElementById('grass');
+            for (let i = 0; i < 50; i++) {
+                const blade = document.createElement('div');
+                blade.className = 'grass-blade';
+                blade.style.left = Math.random() * 100 + '%';
+                blade.style.height = (20 + Math.random() * 30) + 'px';
+                blade.style.animationDelay = Math.random() * 3 + 's';
+                grass.appendChild(blade);
+            }
+        }
+        
+        // 获取日期
+        function getWeekDates(offset = 0) {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const monday = new Date(today);
+            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            monday.setDate(today.getDate() + diff - (offset * 7));
+            
+            return Array.from({length: 7}, (_, i) => {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                return `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+        }
+        
+        // 加载数据
+        function loadData() {
+            const saved = localStorage.getItem('cowCalculator_v3');
+            if (saved) {
+                appData = JSON.parse(saved);
+            } else {
+                initFirstWeek();
+            }
+            renderWeekTabs();
+            loadCurrentWeek();
+        }
+        
+        // 初始化第一周
+        function initFirstWeek() {
+            appData.weeks = [{
+                weekNumber: 1,
+                weekName: '第1周',
+                dates: getWeekDates(),
+                baseClients: 1500,
+                dailyData: weekDays.map((day, i) => ({
+                    day, date: getWeekDates()[i], newClients: 0, growthRate: 0
+                })),
+                isLocked: false,
+                totalNew: 0,
+                totalRate: 0
+            }];
+            appData.currentWeekIndex = 0;
+        }
+        
+        // 保存数据
+        function saveData() {
+            localStorage.setItem('cowCalculator_v3', JSON.stringify(appData));
+            showToast('🐄 哞~ 数据已保存！');
+        }
+        
+        // 显示Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // 渲染周次标签
+        function renderWeekTabs() {
+            const container = document.getElementById('weekTabs');
+            container.innerHTML = appData.weeks.map((week, idx) => `
+                <div class="week-tab ${idx === appData.currentWeekIndex ? 'active' : ''} ${week.isLocked ? 'locked' : ''}"
+                     onclick="switchWeek(${idx})">
+                    ${week.weekName}
+                </div>
+            `).join('');
+        }
+        
+        // 切换周次
+        function switchWeek(index) {
+            saveCurrentWeekData();
+            appData.currentWeekIndex = index;
+            renderWeekTabs();
+            loadCurrentWeek();
+        }
+        
+        // 加载当前周
+        function loadCurrentWeek() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            
+            // 更新状态显示
+            document.getElementById('statusBadge').className = `status-badge ${week.isLocked ? 'locked' : 'editable'}`;
+            document.getElementById('statusBadge').innerHTML = week.isLocked ? 
+                '<i class="fas fa-lock"></i> 已锁定' : '<i class="fas fa-edit"></i> 可编辑';
+            
+            // 更新起始客户数
+            document.getElementById('baseClientsDisplay').textContent = week.baseClients;
+            document.getElementById('baseClientsInput').value = week.baseClients;
+            document.getElementById('baseClientsInput').disabled = week.isLocked;
+            
+            // 更新锁定按钮
+            updateLockButton();
+            
+            // 渲染表格
+            renderTable();
+            
+            // 计算并显示
+            calculate(false);
+        }
+        
+        // 渲染表格
+        function renderTable() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            const tbody = document.getElementById('dataTableBody');
+            
+            tbody.innerHTML = week.dailyData.map((data, idx) => `
+                <tr>
+                    <td><strong>${data.day}</strong></td>
+                    <td>${data.date}</td>
+                    <td>
+                        <input type="number" class="day-input" data-idx="${idx}" 
+                               value="${data.newClients}" min="0" 
+                               ${week.isLocked ? 'disabled' : ''}
+                               onchange="onDayChange(${idx}, this.value)">
+                    </td>
+                    <td class="rate-display" id="rate-${idx}">${data.growthRate.toFixed(2)}%</td>
+                </tr>
+            `).join('');
+        }
+        
+        // 日期变化处理
+        function onDayChange(idx, value) {
+            const week = appData.weeks[appData.currentWeekIndex];
+            week.dailyData[idx].newClients = parseInt(value) || 0;
+            calculate(false);
+        }
+        
+        // 更新起始客户数
+        function updateBaseClients() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            if (week.isLocked) return;
+            
+            const value = parseInt(document.getElementById('baseClientsInput').value) || 0;
+            week.baseClients = value;
+            document.getElementById('baseClientsDisplay').textContent = value;
+            calculate(false);
+        }
+        
+        // 计算
+        function calculate(save = true) {
+            const week = appData.weeks[appData.currentWeekIndex];
+            const base = week.baseClients;
+            
+            let totalNew = 0;
+            let maxDay = {day: '-', count: 0};
+            
+            week.dailyData.forEach((data, idx) => {
+                data.growthRate = base > 0 ? (data.newClients / base) * 100 : 0;
+                totalNew += data.newClients;
+                
+                if (data.newClients > maxDay.count) {
+                    maxDay = {day: data.day, count: data.newClients};
+                }
+                
+                // 更新表格显示
+                const rateCell = document.getElementById(`rate-${idx}`);
+                if (rateCell) rateCell.textContent = data.growthRate.toFixed(2) + '%';
+            });
+            
+            week.totalNew = totalNew;
+            week.totalRate = base > 0 ? (totalNew / base) * 100 : 0;
+            
+            // 更新统计
+            document.getElementById('statTotal').textContent = totalNew;
+            document.getElementById('statAvg').textContent = (totalNew / 7).toFixed(1);
+            document.getElementById('statMax').textContent = maxDay.day;
+            
+            // 更新趋势
+            updateTrend();
+            
+            // 更新高亮框
+            document.getElementById('totalRate').textContent = week.totalRate.toFixed(2) + '%';
+            document.getElementById('totalNew').textContent = totalNew;
+            document.getElementById('totalBase').textContent = base;
+            
+            // 更新每日卡片
+            renderDailyCards();
+            
+            // 更新图表
+            updateChart();
+            
+            if (save) saveData();
+        }
+        
+        // 更新趋势
+        function updateTrend() {
+            const current = appData.weeks[appData.currentWeekIndex];
+            const trendEl = document.getElementById('statTrend');
+            
+            if (appData.currentWeekIndex === 0) {
+                trendEl.textContent = '🌱';
+                trendEl.style.color = '#4CAF50';
+                return;
+            }
+            
+            const prev = appData.weeks[appData.currentWeekIndex - 1];
+            const diff = current.totalRate - prev.totalRate;
+            
+            if (diff > 0) {
+                trendEl.textContent = '↑' + Math.abs(diff).toFixed(1) + '%';
+                trendEl.style.color = '#4CAF50';
+            } else if (diff < 0) {
+                trendEl.textContent = '↓' + Math.abs(diff).toFixed(1) + '%';
+                trendEl.style.color = '#f44336';
+            } else {
+                trendEl.textContent = '→0%';
+                trendEl.style.color = '#ff9800';
+            }
+        }
+        
+        // 渲染每日卡片
+        function renderDailyCards() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            const container = document.getElementById('dailyCards');
+            
+            container.innerHTML = week.dailyData.map(data => `
+                <div class="day-card" onclick="focusInput('${data.day}')">
+                    <div class="day-name">${data.day}</div>
+                    <div class="day-rate">${data.growthRate.toFixed(1)}%</div>
+                    <div class="day-count">+${data.newClients}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 聚焦输入
+        function focusInput(day) {
+            const idx = weekDays.indexOf(day);
+            const input = document.querySelector(`input[data-idx="${idx}"]`);
+            if (input && !input.disabled) {
+                input.focus();
+                input.select();
+            }
+        }
+        
+        // 更新图表
+        function updateChart() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: week.dailyData.map(d => d.day),
+                    datasets: [{
+                        label: '新增客户',
+                        data: week.dailyData.map(d => d.newClients),
+                        backgroundColor: 'rgba(255, 107, 107, 0.8)',
+                        borderColor: '#FF6B6B',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }, {
+                        label: '增长率%',
+                        data: week.dailyData.map(d => d.growthRate),
+                        type: 'line',
+                        borderColor: '#4ECDC4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.2)',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#4ECDC4',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { 
+                            position: 'top',
+                            labels: { font: { family: 'Fredoka', size: 12 } }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { family: 'Fredoka' } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { font: { family: 'Fredoka' } },
+                            grid: { color: 'rgba(0,0,0,0.1)' }
+                        },
+                        y1: {
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { display: false },
+                            ticks: { font: { family: 'Fredoka' } }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 保存当前周数据
+        function saveCurrentWeekData() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            if (week.isLocked) return;
+            
+            document.querySelectorAll('.day-input').forEach(input => {
+                const idx = parseInt(input.dataset.idx);
+                week.dailyData[idx].newClients = parseInt(input.value) || 0;
+            });
+        }
+        
+        // 计算并保存（快捷按钮）
+        function calculateAndSave() {
+            calculate(true);
+            showToast('🐄 哞~ 计算完成并已保存！');
+        }
+        
+        // 自动保存
+        function autoSave() {
+            saveCurrentWeekData();
+            saveData();
+        }
+        
+        // 切换锁定
+        function toggleLock() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            
+            if (week.isLocked) {
+                if (!confirm('🔓 确定要解锁本周吗？解锁后可以修改数据。')) return;
+                week.isLocked = false;
+                showToast('🔓 已解锁，现在可以编辑了！');
+            } else {
+                if (!confirm('🔒 确定要锁定本周吗？锁定后防止误改，可随时解锁。')) return;
+                week.isLocked = true;
+                showToast('🔒 已锁定！数据安全了~');
+            }
+            
+            updateLockButton();
+            renderWeekTabs();
+            loadCurrentWeek();
+            saveData();
+        }
+        
+        // 更新锁定按钮
+        function updateLockButton() {
+            const week = appData.weeks[appData.currentWeekIndex];
+            const btn = document.getElementById('lockBtn');
+            const text = document.getElementById('lockText');
+            
+            if (week.isLocked) {
+                btn.classList.add('locked');
+                btn.innerHTML = '<i class="fas fa-lock-open"></i> <span id="lockText">解锁本周</span>';
+            } else {
+                btn.classList.remove('locked');
+                btn.innerHTML = '<i class="fas fa-lock"></i> <span id="lockText">锁定本周</span>';
+            }
+        }
+        
+        // 新增一周
+        function addNewWeek() {
+            const current = appData.weeks[appData.currentWeekIndex];
+            
+            // 自动锁定当前周（可选）
+            // current.isLocked = true;
+            
+            saveCurrentWeekData();
+            
+            const newBase = current.baseClients + current.totalNew;
+            const newWeekNum = appData.weeks.length + 1;
+            
+            const newWeek = {
+                weekNumber: newWeekNum,
+                weekName: `第${newWeekNum}周`,
+                dates: getWeekDates(appData.weeks.length),
+                baseClients: newBase,
+                dailyData: weekDays.map((day, i) => ({
+                    day, 
+                    date: getWeekDates(appData.weeks.length)[i], 
+                    newClients: 0, 
+                    growthRate: 0
+                })),
+                isLocked: false,
+                totalNew: 0,
+                totalRate: 0
+            };
+            
+            appData.weeks.push(newWeek);
+            appData.currentWeekIndex = appData.weeks.length - 1;
+            
+            renderWeekTabs();
+            loadCurrentWeek();
+            saveData();
+            showToast(`🎉 第${newWeekNum}周已开始！起始客户：${newBase}`);
+        }
+        
+        // 显示历史
+        function showHistory() {
+            const list = document.getElementById('historyList');
+            
+            if (appData.weeks.length === 0) {
+                list.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">暂无记录</div>';
+            } else {
+                list.innerHTML = appData.weeks.map((week, idx) => `
+                    <div class="history-item ${week.isLocked ? 'locked' : ''}">
+                        <div class="history-main">
+                            <div class="history-week">
+                                ${week.weekName} ${week.isLocked ? '🔒' : '🔓'}
+                            </div>
+                            <div class="history-date">${new Date(week.startDate || Date.now()).toLocaleDateString()}</div>
+                        </div>
+                        <div class="history-stats">
+                            <div class="history-stat">
+                                <div class="history-stat-value">${week.baseClients}</div>
+                                <div class="history-stat-label">起始</div>
+                            </div>
+                            <div class="history-stat">
+                                <div class="history-stat-value">${week.totalNew}</div>
+                                <div class="history-stat-label">新增</div>
+                            </div>
+                            <div class="history-stat">
+                                <div class="history-stat-value">${week.totalRate.toFixed(1)}%</div>
+                                <div class="history-stat-label">增长率</div>
+                            </div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="icon-btn btn-goto" onclick="gotoWeek(${idx})" title="查看">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="icon-btn btn-delete" onclick="deleteWeek(${idx})" title="删除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).reverse().join('');
+            }
+            
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+        
+        // 跳转到指定周
+        function gotoWeek(index) {
+            closeHistory();
+            switchWeek(index);
+        }
+        
+        // 删除周次
+        function deleteWeek(index) {
+            if (!confirm(`⚠️ 确定要删除${appData.weeks[index].weekName}吗？此操作不可恢复！`)) return;
+            
+            if (index < appData.weeks.length - 1) {
+                if (!confirm('⚠️ 警告：删除中间周会导致后续周数据异常！确定要继续吗？')) return;
+            }
+            
+            appData.weeks.splice(index, 1);
+            
+            // 调整当前索引
+            if (appData.currentWeekIndex >= index && appData.currentWeekIndex > 0) {
+                appData.currentWeekIndex--;
+            }
+            if (appData.currentWeekIndex >= appData.weeks.length) {
+                appData.currentWeekIndex = appData.weeks.length - 1;
+            }
+            
+            // 重新编号
+            appData.weeks.forEach((w, i) => {
+                w.weekNumber = i + 1;
+                w.weekName = `第${i + 1}周`;
+            });
+            
+            renderWeekTabs();
+            loadCurrentWeek();
+            saveData();
+            showHistory(); // 刷新列表
+            showToast('🗑️ 已删除');
+        }
+        
+        // 关闭历史
+        function closeHistory() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+        
+        // 点击背景关闭
+        function closeModalOnBackdrop(e) {
+            if (e.target.id === 'historyModal') closeHistory();
+        }
+        
+        // 重置所有
+        function resetAll() {
+            if (!confirm('🚨 确定要重置所有数据吗？所有周次记录将被清除！')) return;
+            if (!confirm('最后确认：真的真的要清空吗？')) return;
+            
+            localStorage.removeItem('cowCalculator_v3');
+            initFirstWeek();
+            renderWeekTabs();
+            loadCurrentWeek();
+            showToast('🧹 已重置，重新开始！');
+        }
+    </script>
+</body>
+</html>
